@@ -2,6 +2,9 @@ import React from 'react';
 import TransactionSection from './TransactionSection';
 import AdvancedFeatures from './AdvancedFeatures';
 import MobileAppShowcase from './MobileAppShowcase';
+import ScheduleTransaction from "./ScheduleTransaction";
+import { ArrowRight, ChevronRight, ChevronLeft, Check, DollarSign, Globe, Shield, Clock } from "react-feather";
+
 
 function Home() {
   return (
@@ -157,6 +160,51 @@ function Home() {
             </div>
           </div>
         </section>
+
+        {/* CTA Section with Animated Background */}
+        <section className="py-16 relative overflow-hidden bg-gradient-to-r from-indigo-900 to-purple-900 text-white">
+          {/* Animated background elements */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-full">
+              <svg className="absolute top-0 left-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <path
+                  fill="none"
+                  stroke="rgba(255,255,255,0.1)"
+                  strokeWidth="2"
+                  d="M0,0 Q50,50 100,0 V100 Q50,50 0,100 Z"
+                  className="animate-wave"
+                />
+                <path
+                  fill="none"
+                  stroke="rgba(255,255,255,0.05)"
+                  strokeWidth="2"
+                  d="M0,20 Q50,70 100,20 V100 Q50,50 0,100 Z"
+                  className="animate-wave animation-delay-1000"
+                />
+              </svg>
+            </div>
+          </div>
+
+          <div className="container mx-auto px-4 relative z-10">
+            <div className="max-w-3xl mx-auto text-center">
+              <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to transform your banking experience?</h2>
+              <p className="text-xl mb-8 text-indigo-200">
+                Join millions of satisfied customers who have switched to BankApp for their banking needs.
+              </p>
+              <div className="flex flex-col sm:flex-row justify-center gap-4">
+                <button className="bg-white text-indigo-900 px-8 py-4 rounded-lg font-medium hover:bg-gray-100 transition-colors duration-300 transform hover:scale-105">
+                  Get Started Now
+                </button>
+                <button className="border-2 border-white text-white px-8 py-4 rounded-lg font-medium hover:bg-white hover:text-indigo-900 transition-all duration-300 transform hover:scale-105">
+                  Contact Sales
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+
       </main>
     </div>
   );

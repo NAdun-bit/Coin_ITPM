@@ -2,46 +2,53 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import ExpenseList from "./ExpenseList"
-import ExpenseForm from "./ExpenseForm"
-import ExpenseStats from "./ExpenseStats"
-import ExpenseReports from "./ExpenseReports"
-import { fetchExpenses, addExpense, updateExpense, deleteExpense } from "../../Services/expenseService"
+import SavingsGoalList from "./SavingsGoalList"
+import SavingsGoalForm from "./SavingsGoalForm"
+import SavingsGoalStats from "./SavingsGoalStats"
+import SavingsGoalReports from "./SavingsGoalReports"
+import {
+  fetchSavingsGoals,
+  addSavingsGoal,
+  updateSavingsGoal,
+  deleteSavingsGoal,
+} from "../../Services/savingsGoalService"
 
-function ExpenseDashboard() {
-  const [expenses, setExpenses] = useState([])
+function SavingsDashboard() {
+  const [savingsGoals, setSavingsGoals] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
   const [activeTab, setActiveTab] = useState("list")
-  const [currentExpense, setCurrentExpense] = useState(null)
+  const [currentGoal, setCurrentGoal] = useState(null)
 
   useEffect(() => {
-    const getExpenses = async () => {
+    const getSavingsGoals = async () => {
       try {
         setIsLoading(true)
-        const data = await fetchExpenses()
-        setExpenses(data)
+        console.log("Attempting to fetch savings goals...")
+        const data = await fetchSavingsGoals()
+        console.log("Savings goals fetched successfully:", data)
+        setSavingsGoals(data)
         setError(null)
       } catch (err) {
-        setError("Failed to fetch expenses. Please try again later.")
-        console.error(err)
+        console.error("Error in SavingsDashboard:", err)
+        setError("Failed to fetch savings goals. Please try again later.")
       } finally {
         setIsLoading(false)
       }
     }
 
-    getExpenses()
+    getSavingsGoals()
   }, [])
 
-  const handleAddExpense = async (expenseData) => {
+  const handleAddSavingsGoal = async (goalData) => {
     try {
       setIsLoading(true)
-      const newExpense = await addExpense(expenseData)
-      setExpenses([...expenses, newExpense])
+      const newGoal = await addSavingsGoal(goalData)
+      setSavingsGoals([...savingsGoals, newGoal])
       setActiveTab("list")
       return true
     } catch (err) {
-      setError("Failed to add expense. Please try again.")
+      setError("Failed to add savings goal. Please try again.")
       console.error(err)
       return false
     } finally {
@@ -49,16 +56,16 @@ function ExpenseDashboard() {
     }
   }
 
-  const handleUpdateExpense = async (id, expenseData) => {
+  const handleUpdateSavingsGoal = async (id, goalData) => {
     try {
       setIsLoading(true)
-      const updatedExpense = await updateExpense(id, expenseData)
-      setExpenses(expenses.map((expense) => (expense._id === id ? updatedExpense : expense)))
-      setCurrentExpense(null)
+      const updatedGoal = await updateSavingsGoal(id, goalData)
+      setSavingsGoals(savingsGoals.map((goal) => (goal._id === id ? updatedGoal : goal)))
+      setCurrentGoal(null)
       setActiveTab("list")
       return true
     } catch (err) {
-      setError("Failed to update expense. Please try again.")
+      setError("Failed to update savings goal. Please try again.")
       console.error(err)
       return false
     } finally {
@@ -66,14 +73,14 @@ function ExpenseDashboard() {
     }
   }
 
-  const handleDeleteExpense = async (id) => {
+  const handleDeleteSavingsGoal = async (id) => {
     try {
       setIsLoading(true)
-      await deleteExpense(id)
-      setExpenses(expenses.filter((expense) => expense._id !== id))
+      await deleteSavingsGoal(id)
+      setSavingsGoals(savingsGoals.filter((goal) => goal._id !== id))
       return true
     } catch (err) {
-      setError("Failed to delete expense. Please try again.")
+      setError("Failed to delete savings goal. Please try again.")
       console.error(err)
       return false
     } finally {
@@ -81,8 +88,8 @@ function ExpenseDashboard() {
     }
   }
 
-  const handleEditExpense = (expense) => {
-    setCurrentExpense(expense)
+  const handleEditSavingsGoal = (goal) => {
+    setCurrentGoal(goal)
     setActiveTab("add")
   }
 
@@ -112,9 +119,9 @@ function ExpenseDashboard() {
     >
       <div className="max-w-7xl mx-auto">
         <motion.div variants={itemVariants} className="text-center mb-12">
-          <h1 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">Expense Splitting</h1>
+          <h1 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">Savings Goals</h1>
           <p className="mt-3 max-w-2xl mx-auto text-xl text-gray-500 sm:mt-4">
-            Easily manage and split expenses with friends, roommates, or travel companions.
+            Set and track your financial goals to achieve your dreams.
           </p>
         </motion.div>
 
@@ -124,6 +131,12 @@ function ExpenseDashboard() {
             variants={itemVariants}
           >
             <span className="block sm:inline">{error}</span>
+            <button
+              onClick={() => window.location.reload()}
+              className="ml-4 px-3 py-1 bg-red-200 hover:bg-red-300 rounded text-sm"
+            >
+              Retry
+            </button>
             <span className="absolute top-0 bottom-0 right-0 px-4 py-3" onClick={() => setError(null)}>
               <svg
                 className="fill-current h-6 w-6 text-red-500"
@@ -153,7 +166,7 @@ function ExpenseDashboard() {
                   } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
                   onClick={() => setActiveTab("list")}
                 >
-                  Expenses
+                  Goals
                 </button>
                 <button
                   className={`${
@@ -162,11 +175,11 @@ function ExpenseDashboard() {
                       : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                   } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
                   onClick={() => {
-                    setCurrentExpense(null)
+                    setCurrentGoal(null)
                     setActiveTab("add")
                   }}
                 >
-                  {currentExpense ? "Edit Expense" : "Add Expense"}
+                  {currentGoal ? "Edit Goal" : "Add Goal"}
                 </button>
                 <button
                   className={`${
@@ -200,21 +213,25 @@ function ExpenseDashboard() {
             ) : (
               <>
                 {activeTab === "list" && (
-                  <ExpenseList expenses={expenses} onEdit={handleEditExpense} onDelete={handleDeleteExpense} />
+                  <SavingsGoalList
+                    savingsGoals={savingsGoals}
+                    onEdit={handleEditSavingsGoal}
+                    onDelete={handleDeleteSavingsGoal}
+                  />
                 )}
 
                 {activeTab === "add" && (
-                  <ExpenseForm
-                    expense={currentExpense}
+                  <SavingsGoalForm
+                    goal={currentGoal}
                     onSubmit={
-                      currentExpense ? (data) => handleUpdateExpense(currentExpense._id, data) : handleAddExpense
+                      currentGoal ? (data) => handleUpdateSavingsGoal(currentGoal._id, data) : handleAddSavingsGoal
                     }
                   />
                 )}
 
-                {activeTab === "stats" && <ExpenseStats expenses={expenses} />}
+                {activeTab === "stats" && <SavingsGoalStats savingsGoals={savingsGoals} />}
 
-                {activeTab === "reports" && <ExpenseReports expenses={expenses} />}
+                {activeTab === "reports" && <SavingsGoalReports savingsGoals={savingsGoals} />}
               </>
             )}
           </div>
@@ -238,5 +255,5 @@ function ExpenseDashboard() {
   )
 }
 
-export default ExpenseDashboard
+export default SavingsDashboard
 

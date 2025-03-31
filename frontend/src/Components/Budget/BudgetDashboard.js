@@ -2,46 +2,53 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import ExpenseList from "./ExpenseList"
-import ExpenseForm from "./ExpenseForm"
-import ExpenseStats from "./ExpenseStats"
-import ExpenseReports from "./ExpenseReports"
-import { fetchExpenses, addExpense, updateExpense, deleteExpense } from "../../Services/expenseService"
+import BudgetList from "./BudgetList"
+import BudgetForm from "./BudgetForm"
+import BudgetDetails from "./BudgetDetails"
+import BudgetInsights from "./BudgetInsights"
+import { fetchBudgets, addBudget, updateBudget, deleteBudget } from "../../Services/budgetService"
 
-function ExpenseDashboard() {
-  const [expenses, setExpenses] = useState([])
+function BudgetDashboard() {
+  const [budgets, setBudgets] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
   const [activeTab, setActiveTab] = useState("list")
-  const [currentExpense, setCurrentExpense] = useState(null)
+  const [currentBudget, setCurrentBudget] = useState(null)
+  const [selectedBudgetId, setSelectedBudgetId] = useState(null)
 
   useEffect(() => {
-    const getExpenses = async () => {
+    const getBudgets = async () => {
       try {
         setIsLoading(true)
-        const data = await fetchExpenses()
-        setExpenses(data)
+        const data = await fetchBudgets()
+        setBudgets(data)
+
+        // If there are budgets, select the most recent one by default
+        if (data.length > 0 && !selectedBudgetId) {
+          setSelectedBudgetId(data[0]._id)
+        }
+
         setError(null)
       } catch (err) {
-        setError("Failed to fetch expenses. Please try again later.")
+        setError("Failed to fetch budgets. Please try again later.")
         console.error(err)
       } finally {
         setIsLoading(false)
       }
     }
 
-    getExpenses()
+    getBudgets()
   }, [])
 
-  const handleAddExpense = async (expenseData) => {
+  const handleAddBudget = async (budgetData) => {
     try {
       setIsLoading(true)
-      const newExpense = await addExpense(expenseData)
-      setExpenses([...expenses, newExpense])
+      const newBudget = await addBudget(budgetData)
+      setBudgets([newBudget, ...budgets])
       setActiveTab("list")
       return true
     } catch (err) {
-      setError("Failed to add expense. Please try again.")
+      setError("Failed to add budget. Please try again.")
       console.error(err)
       return false
     } finally {
@@ -49,16 +56,16 @@ function ExpenseDashboard() {
     }
   }
 
-  const handleUpdateExpense = async (id, expenseData) => {
+  const handleUpdateBudget = async (id, budgetData) => {
     try {
       setIsLoading(true)
-      const updatedExpense = await updateExpense(id, expenseData)
-      setExpenses(expenses.map((expense) => (expense._id === id ? updatedExpense : expense)))
-      setCurrentExpense(null)
+      const updatedBudget = await updateBudget(id, budgetData)
+      setBudgets(budgets.map((budget) => (budget._id === id ? updatedBudget : budget)))
+      setCurrentBudget(null)
       setActiveTab("list")
       return true
     } catch (err) {
-      setError("Failed to update expense. Please try again.")
+      setError("Failed to update budget. Please try again.")
       console.error(err)
       return false
     } finally {
@@ -66,14 +73,21 @@ function ExpenseDashboard() {
     }
   }
 
-  const handleDeleteExpense = async (id) => {
+  const handleDeleteBudget = async (id) => {
     try {
       setIsLoading(true)
-      await deleteExpense(id)
-      setExpenses(expenses.filter((expense) => expense._id !== id))
+      await deleteBudget(id)
+      setBudgets(budgets.filter((budget) => budget._id !== id))
+
+      // If the deleted budget was selected, select another one
+      if (selectedBudgetId === id) {
+        const remainingBudgets = budgets.filter((budget) => budget._id !== id)
+        setSelectedBudgetId(remainingBudgets.length > 0 ? remainingBudgets[0]._id : null)
+      }
+
       return true
     } catch (err) {
-      setError("Failed to delete expense. Please try again.")
+      setError("Failed to delete budget. Please try again.")
       console.error(err)
       return false
     } finally {
@@ -81,9 +95,14 @@ function ExpenseDashboard() {
     }
   }
 
-  const handleEditExpense = (expense) => {
-    setCurrentExpense(expense)
+  const handleEditBudget = (budget) => {
+    setCurrentBudget(budget)
     setActiveTab("add")
+  }
+
+  const handleViewBudget = (budgetId) => {
+    setSelectedBudgetId(budgetId)
+    setActiveTab("details")
   }
 
   const containerVariants = {
@@ -112,9 +131,9 @@ function ExpenseDashboard() {
     >
       <div className="max-w-7xl mx-auto">
         <motion.div variants={itemVariants} className="text-center mb-12">
-          <h1 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">Expense Splitting</h1>
+          <h1 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">Budget Planning</h1>
           <p className="mt-3 max-w-2xl mx-auto text-xl text-gray-500 sm:mt-4">
-            Easily manage and split expenses with friends, roommates, or travel companions.
+            Create and manage your monthly budgets to take control of your finances.
           </p>
         </motion.div>
 
@@ -152,8 +171,9 @@ function ExpenseDashboard() {
                       : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                   } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
                   onClick={() => setActiveTab("list")}
+                  data-tab="list"
                 >
-                  Expenses
+                  Budgets
                 </button>
                 <button
                   className={`${
@@ -162,31 +182,35 @@ function ExpenseDashboard() {
                       : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                   } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
                   onClick={() => {
-                    setCurrentExpense(null)
+                    setCurrentBudget(null)
                     setActiveTab("add")
                   }}
+                  data-tab="add"
                 >
-                  {currentExpense ? "Edit Expense" : "Add Expense"}
+                  {currentBudget ? "Edit Budget" : "Create Budget"}
                 </button>
                 <button
                   className={`${
-                    activeTab === "stats"
+                    activeTab === "details"
                       ? "border-blue-500 text-blue-600"
                       : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                   } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-                  onClick={() => setActiveTab("stats")}
+                  onClick={() => setActiveTab("details")}
+                  data-tab="details"
+                  disabled={!selectedBudgetId}
                 >
-                  Statistics
+                  Budget Details
                 </button>
                 <button
                   className={`${
-                    activeTab === "reports"
+                    activeTab === "insights"
                       ? "border-blue-500 text-blue-600"
                       : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                   } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-                  onClick={() => setActiveTab("reports")}
+                  onClick={() => setActiveTab("insights")}
+                  data-tab="insights"
                 >
-                  Reports
+                  Insights
                 </button>
               </nav>
             </div>
@@ -200,21 +224,27 @@ function ExpenseDashboard() {
             ) : (
               <>
                 {activeTab === "list" && (
-                  <ExpenseList expenses={expenses} onEdit={handleEditExpense} onDelete={handleDeleteExpense} />
-                )}
-
-                {activeTab === "add" && (
-                  <ExpenseForm
-                    expense={currentExpense}
-                    onSubmit={
-                      currentExpense ? (data) => handleUpdateExpense(currentExpense._id, data) : handleAddExpense
-                    }
+                  <BudgetList
+                    budgets={budgets}
+                    onEdit={handleEditBudget}
+                    onDelete={handleDeleteBudget}
+                    onView={handleViewBudget}
+                    selectedBudgetId={selectedBudgetId}
                   />
                 )}
 
-                {activeTab === "stats" && <ExpenseStats expenses={expenses} />}
+                {activeTab === "add" && (
+                  <BudgetForm
+                    budget={currentBudget}
+                    onSubmit={currentBudget ? (data) => handleUpdateBudget(currentBudget._id, data) : handleAddBudget}
+                  />
+                )}
 
-                {activeTab === "reports" && <ExpenseReports expenses={expenses} />}
+                {activeTab === "details" && (
+                  <BudgetDetails budgetId={selectedBudgetId} budgets={budgets} onBudgetChange={setSelectedBudgetId} />
+                )}
+
+                {activeTab === "insights" && <BudgetInsights budgets={budgets} />}
               </>
             )}
           </div>
@@ -224,7 +254,7 @@ function ExpenseDashboard() {
           <p className="text-gray-500">
             Need help? Check out our{" "}
             <a href="#" className="text-blue-600 hover:text-blue-800">
-              FAQ
+              Budget Planning Guide
             </a>{" "}
             or{" "}
             <a href="#" className="text-blue-600 hover:text-blue-800">
@@ -238,5 +268,5 @@ function ExpenseDashboard() {
   )
 }
 
-export default ExpenseDashboard
+export default BudgetDashboard
 
